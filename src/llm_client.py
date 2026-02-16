@@ -4,6 +4,7 @@ from openai import OpenAI
 from typing import Type, TypeVar, List, Optional, Any
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from src.config import DEFAULT_MODEL, SYSTEM_PROMPT
 
 # Load environment variables
 load_dotenv()
@@ -12,26 +13,20 @@ T = TypeVar("T", bound=BaseModel)
 
 class LLMClient:
     def __init__(self):
-        # Using OpenAI client as the underlying engine for Instructor/Gemini
-        # Adjust base_url and api_key as needed for your specific SDK setup
         self.api_key = os.getenv("OPENAI_API_KEY")
-        
-        # Initialize the Patch specifically for structured output
-        # Instructor's patching allows LLMs to return complex Pydantic objects
         self.client = instructor.patch(
             OpenAI(api_key=self.api_key),
             mode=instructor.Mode.JSON
         )
 
     def _build_prompt(self, raw_text: str, previous_errors: Optional[List[str]] = None) -> str:
-        """Constructs a prompt that includes feedback for self-correction."""
         prompt = f"Extract structured information from the following text:\n\n{raw_text}\n"
         
         if previous_errors:
             prompt += "\n### Previous Validation Errors found in your last output:\n"
             for error in previous_errors:
                 prompt += f"- {error}\n"
-            prompt += "\nPlease correct these errors in your new response."
+            prompt += "\nPlease correct these errors in your new response using mathematical logic."
             
         return prompt
 
@@ -42,28 +37,14 @@ class LLMClient:
         errors: Optional[List[str]] = None,
         max_retries: int = 3
     ) -> T:
-        """
-        Extracts data using the specified Pydantic schema.
-        Automatically handles schema adherence via Instructor.
-        """
         prompt = self._build_prompt(text, errors)
         
         try:
-            # Instructor handles the mapping of the model to the JSON schema
-            # and performs retries if the JSON is malformed
             return self.client.chat.completions.create(
-                model="gpt-4o-mini",  # Using a cheaper but capable model
+                model=DEFAULT_MODEL,
                 response_model=response_model,
                 messages=[
-                    {
-                        "role": "system", 
-                        "content": (
-                            "You are a literal data extraction assistant. "
-                            "Extract values EXACTLY as mentioned in the text. "
-                            "Do not perform your own calculations or fix math errors in the source. "
-                            "If the text says 10 * 5 = 60, extract 60."
-                        )
-                    },
+                    {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": prompt}
                 ],
                 max_retries=max_retries

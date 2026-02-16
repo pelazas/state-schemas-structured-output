@@ -1,0 +1,18 @@
+Project: Mars Colony Alpha
+Vendor: Red Planet Logistics
+Tax ID: US-101-2022
+Contact: contact@redplanet.com
+
+Schedule:
+Start: 2025-01-01
+End: 2025-06-30
+
+Items:
+- Habitat Modules: 10 units at $500,000 each. Total: $5,000,000. (Software) <- Error in category?
+- Solar Arrays: 20 units at $25,000 each. Total: $500,000. (Hardware)
+- Oxygen Scrubber Maintenance: $50,000 flat fee. (Service)
+
+Summary:
+Discount: $100,000
+Tax: 8% on taxable items (Hardware and Service).
+Grand Total: Calculation needed.

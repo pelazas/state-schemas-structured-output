@@ -2,6 +2,7 @@ from typing import Literal, TypedDict, List, Optional
 from langgraph.graph import StateGraph, END
 from src.schemas import ExtractorState, StructuredOutput
 from src.llm_client import extract_structured_data
+from src.config import MAX_ATTEMPTS
 from pydantic import ValidationError
 
 # Define the State as a TypedDict for LangGraph compatibility, 
@@ -63,7 +64,7 @@ def should_continue(state: AgentState) -> Literal["extract", "end"]:
     if state["is_valid"]:
         return "end"
     
-    if state["attempt_count"] >= 3:
+    if state["attempt_count"] >= MAX_ATTEMPTS:
         print("--- Max Attempts Reached ---")
         state["warning_flag"] = True
         return "end"
